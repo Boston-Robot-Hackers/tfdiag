@@ -1,0 +1,36 @@
+# tfdiag
+
+## Context
+
+A CLI tool for ROS2 that analyzes existing TF transforms and identifies problems. Uses cyclopts for the command-line interface.
+
+## Current Status
+
+The tool successfully lists TF frames with the following features:
+- Displays frame hierarchy (parent/child relationships)
+- Shows publisher nodes for each frame
+- Reports frame rates and buffer information
+- Supports filtering static frames via `--include-static` flag
+
+## Implementation
+
+**Single implementation approach:** Uses topic-based detection (tf_lister.py)
+- Removed tf_lister_accurate.py as it provided no additional accuracy
+- Simpler codebase following YAGNI principle
+
+**CLI options:**
+- `ros2 run tfdiag tfdiag list` - List dynamic TF frames only (default)
+- `ros2 run tfdiag tfdiag list --include-static` - Include static frames
+
+## Architecture
+
+- **main.py** - Cyclopts CLI entry point
+- **tf_lister.py** - TF frame detection and display logic
+- Samples TF data for 5 seconds to gather comprehensive frame information
+
+## Reference Documentation
+* [rules.md](rules.md) - Coding standards
+* [IMPLEMENTATION_NOTES.md](IMPLEMENTATION_NOTES.md) - Technical implementation details
+* [Cyclopts docs](https://cyclopts.readthedocs.io)
+* [TF2 Introduction](https://docs.ros.org/en/kilted/Tutorials/Intermediate/Tf2/Introduction-To-Tf2.html)
+* [TF2 BufferCore API](https://docs.ros2.org/foxy/api/tf2/classtf2_1_1BufferCore.html)
