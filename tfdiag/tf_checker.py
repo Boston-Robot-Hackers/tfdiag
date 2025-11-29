@@ -6,15 +6,20 @@
 import time
 
 import rclpy
-from rclpy.node import Node
 import tf2_ros
-from tf2_ros import LookupException, ConnectivityException, ExtrapolationException
-
+from rclpy.node import Node
+from tf2_ros import ConnectivityException, ExtrapolationException, LookupException
 
 TF_PAIRS_TO_CHECK = [
     ("odom", "base_link"),
     ("odom", "base_footprint"),
+    ("odom", "laser"),
+    ("odom", "imu"),
+    ("base_link", "base_footprint"),
     ("base_link", "laser"),
+    ("base_link", "imu"),
+    ("base_footprint", "laser"),
+    ("base_footprint", "imu"),
     ("map", "odom"),
 ]
 
@@ -43,36 +48,50 @@ class TfChecker(Node):
         }
 
         try:
+            # Use current time for lookup to get accurate timestamps
+            # (using time zero causes static transforms to return with timestamp=0)
+            lookup_time = self.get_clock().now()
             transform = self._tf_buffer.lookup_transform(
-                target_frame, source_frame, rclpy.time.Time()
+                target_frame, source_frame, lookup_time
             )
 
             result["available"] = True
 
             current_time = time.time()
-            transform_time = transform.header.stamp.sec + transform.header.stamp.nanosec / 1e9
+            transform_time = (
+                transform.header.stamp.sec + transform.header.stamp.nanosec / 1e9
+            )
             result["age"] = current_time - transform_time
 
             chain = self._tf_buffer._getFrameStrings()
             result["chain"] = self._build_chain(source_frame, target_frame, chain)
 
         except LookupException as e:
-            result["error"] = f"Lookup failed: {str(e)}"
+            result["error"] = f"Lookup failed: {e!s}"
         except ConnectivityException as e:
-            result["error"] = f"Connectivity error: {str(e)}"
+            result["error"] = f"Connectivity error: {e!s}"
         except ExtrapolationException as e:
-            result["error"] = f"Extrapolation error: {str(e)}"
+            result["error"] = f"Extrapolation error: {e!s}"
         except Exception as e:
-            result["error"] = f"Unknown error: {str(e)}"
+            result["error"] = f"Unknown error: {e!s}"
 
         return result
 
     def _build_chain(self, source, target, all_frames):
         """Build the transform chain from source to target."""
         try:
-            chain = self._tf_buffer._chainAsVector(target, rclpy.time.Time(), source, rclpy.time.Time(), target)
-            return list(chain) if chain else [source, target]
-        except Exception:
+            # _chainAsVector returns the complete chain from source to target
+            # Parameters: target_frame, target_time, source_frame, source_time, fixed_frame
+            chain = self._tf_buffer._chainAsVector(
+                target, rclpy.time.Time(), source, rclpy.time.Time(), target
+            )
+            if chain and len(chain) > 0:
+                return list(chain)
+            # If _chainAsVector returns empty, just show source and target
+            return [source, target]
+        except Exception as e:
+            # If chain lookup fails, try to at least show the direct connection
+            self.get_logger().debug(f"Chain lookup failed for {source} -> {target}: {e}")
             return [source, target]
 
     def check_all_pairs(self):
@@ -139,11 +158,13 @@ class TfChecker(Node):
         total = len(results)
         available = sum(1 for r in results if r["available"])
         warnings = sum(
-            1 for r in results
+            1
+            for r in results
             if r["available"] and MAX_AGE_WARNING <= r["age"] < MAX_AGE_ERROR
         )
         errors = sum(
-            1 for r in results
+            1
+            for r in results
             if not r["available"] or (r["available"] and r["age"] >= MAX_AGE_ERROR)
         )
 
