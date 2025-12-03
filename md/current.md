@@ -14,9 +14,8 @@ The tool successfully lists TF frames with the following features:
 
 ## Implementation
 
-**Single implementation approach:** Uses topic-based detection (tf_lister.py)
-- Removed tf_lister_accurate.py as it provided no additional accuracy
-- Simpler codebase following YAGNI principle
+**Single implementation approach:** The improved publisher detection logic from `tf_lister_accurate.py` has been integrated into `tf_lister.py` to provide a more accurate and robust solution.
+- `tf_lister_accurate.py` has been removed.
 
 **CLI options:**
 - `ros2 run tfdiag tfdiag list` - List dynamic TF frames only (default)

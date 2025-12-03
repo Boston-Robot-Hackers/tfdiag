@@ -9,6 +9,7 @@ import cyclopts
 
 from tfdiag import tf_checker
 from tfdiag import tf_lister
+from tfdiag import tf_timechecker
 from tfdiag import tf_topics
 
 
@@ -17,13 +18,13 @@ app = cyclopts.App(
     help="TF diagnostics tool for ROS2"
 )
 
-
 @app.command(name="list")
 def list_frames(
     dynamic: Annotated[bool, cyclopts.Parameter(name=["-d", "--dynamic"])] = False,
     static: Annotated[bool, cyclopts.Parameter(name=["-s", "--static"])] = False,
     compare: Annotated[bool, cyclopts.Parameter(name=["-c", "--compare"])] = False,
     topics: Annotated[bool, cyclopts.Parameter(name=["-t", "--topics"])] = False,
+    check_time: Annotated[bool, cyclopts.Parameter(name=["-ct","--check-time"])] = False,
     all_reports: Annotated[bool, cyclopts.Parameter(name=["-a", "--all"])] = False,
 ):
     """List TF frames and check transforms.
@@ -33,23 +34,26 @@ def list_frames(
         static: List static TF frames
         compare: Compare pairs of TF transforms
         topics: List topics publishing TF frames
-        all_reports: Run all reports (static, compare, topics)
+        check_time: Analyze message timestamp synchronization
+        all_reports: Run all reports (static, compare, topics, check_time)
     """
     # If --all is specified, enable all reports
     if all_reports:
         static = True
         compare = True
         topics = True
+        check_time = True
 
     # If no options specified, show help
-    if not any([dynamic, static, compare, topics]):
+    if not any([dynamic, static, compare, topics, check_time]):
         print("Usage: tfdiag list [OPTIONS]")
         print("\nOptions:")
         print("  --dynamic, -d    List dynamic TF frames")
         print("  --static, -s     List static TF frames")
         print("  --compare, -c    Compare pairs of TF transforms")
         print("  --topics, -t     List topics publishing TF frames")
-        print("  --all, -a        Run all reports (static, compare, topics)")
+        print("  --check-time     Analyze message timestamp synchronization")
+        print("  --all, -a        Run all reports (static, compare, topics, check_time)")
         print("\nMultiple options can be combined.")
         return
 
@@ -64,6 +68,10 @@ def list_frames(
     if topics:
         print()  # Add spacing between reports
         tf_topics.monitor_tf_topics()
+
+    if check_time:
+        print()  # Add spacing between reports
+        tf_timechecker.check_timestamps()
 
 
 @app.command(name="help")
