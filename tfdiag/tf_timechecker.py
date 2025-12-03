@@ -10,8 +10,8 @@ from rclpy.node import Node
 from rclpy.qos import QoSProfile
 
 SAMPLE_DURATION = 5.0
-TIME_DIFF_WARNING_MS = 100.0
-TIME_DIFF_ERROR_MS = 1000.0
+TIME_DIFF_WARNING_MS = 25.0
+TIME_DIFF_ERROR_MS = 100.0
 
 # Topics to check for timestamp synchronization
 # Format: (topic_name, message_type_string)
@@ -187,7 +187,6 @@ class TimeChecker(Node):
                 msg_class = getattr(module, msg)
 
                 available_topics.append((topic_name, msg_class))
-                print(f"Loaded: {topic_name} ({type_string})")
 
             except Exception as e:
                 print(f"Warning: Failed to load {topic_name} ({type_string}): {e}")
