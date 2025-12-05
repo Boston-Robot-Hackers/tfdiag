@@ -35,101 +35,81 @@ class TimeChecker(Node):
         self._topic_data = {}
 
     def subscribe_to_topic(self, topic_name, msg_type):
-        """Subscribe to a topic and track its timestamps.
-
-        Args:
-            topic_name: Name of the topic to subscribe to
-            msg_type: Message class type
-
-        """
+        # QoS depth=10 buffers last 10 messages to avoid missing data during processing
         qos_profile = QoSProfile(depth=10)
 
         def callback(msg):
             ros_now = self.get_clock().now()
             system_now = time.time()
 
-            try:
-                # Get timestamp based on message structure
-                timestamp = self._get_timestamp(msg)
+            # Get timestamp based on message structure
+            timestamp = self._get_timestamp(msg)
 
-                if timestamp is None:
-                    return
+            # Extract sec and nanosec from the timestamp
+            msg_stamp_sec = timestamp.sec
+            msg_stamp_nanosec = timestamp.nanosec
+            msg_stamp_total = msg_stamp_sec + msg_stamp_nanosec / 1e9
 
-                # Extract sec and nanosec from the timestamp
-                msg_stamp_sec = timestamp.sec
-                msg_stamp_nanosec = timestamp.nanosec
-                msg_stamp_total = msg_stamp_sec + msg_stamp_nanosec / 1e9
+            ros_now_sec = (
+                ros_now.seconds_nanoseconds()[0]
+                + ros_now.seconds_nanoseconds()[1] / 1e9
+            )
+            ros_diff = (ros_now_sec - msg_stamp_total) * 1000.0
+            system_diff = (system_now - msg_stamp_total) * 1000.0
 
-                ros_now_sec = (
-                    ros_now.seconds_nanoseconds()[0]
-                    + ros_now.seconds_nanoseconds()[1] / 1e9
-                )
-                ros_diff = (ros_now_sec - msg_stamp_total) * 1000.0
-                system_diff = (system_now - msg_stamp_total) * 1000.0
-
-                if topic_name not in self._topic_data:
-                    self._topic_data[topic_name] = []
-
-                self._topic_data[topic_name].append(
-                    {
-                        "msg_time": msg_stamp_total,
-                        "ros_time": ros_now_sec,
-                        "system_time": system_now,
-                        "ros_diff_ms": ros_diff,
-                        "system_diff_ms": system_diff,
-                    }
-                )
-            except (AttributeError, IndexError) as e:
-                self.get_logger().warning(
-                    f"Failed to extract timestamp from {topic_name}: {e}"
-                )
+            # setdefault creates empty list if topic_name not in dict, then appends to it
+            self._topic_data.setdefault(topic_name, []).append(
+                {
+                    "msg_time": msg_stamp_total,
+                    "ros_time": ros_now_sec,
+                    "system_time": system_now,
+                    "ros_diff_ms": ros_diff,
+                    "system_diff_ms": system_diff,
+                }
+            )
 
         self.create_subscription(msg_type, topic_name, callback, qos_profile)
 
+    def _check_tf_timestamps(self, msg):
+        if not hasattr(msg, "transforms") or len(msg.transforms) <= 1:
+            return
+
+        timestamps = [
+            t.header.stamp.sec + t.header.stamp.nanosec / 1e9
+            for t in msg.transforms
+        ]
+        min_ts = min(timestamps)
+        max_ts = max(timestamps)
+        diff_ms = (max_ts - min_ts) * 1000.0
+
+        if diff_ms > 1.0:
+            self.get_logger().error(
+                f"TF timestamp mismatch: {len(timestamps)} transforms differ by {diff_ms:.2f} ms"
+            )
+
     def _get_timestamp(self, msg):
-        """Get timestamp from a message based on common ROS2 patterns.
-
-        Args:
-            msg: The ROS2 message object
-
-        Returns:
-            The timestamp object, or None if not found
-
-        """
         # Most messages have header.stamp (Odometry, Imu, LaserScan, etc.)
-        if hasattr(msg, "header") and hasattr(msg.header, "stamp"):
+        if hasattr(msg, "header"):
             return msg.header.stamp
 
         # TF messages have an array of transforms
-        if hasattr(msg, "transforms") and len(msg.transforms) > 0:
+        if hasattr(msg, "transforms"):
+            self._check_tf_timestamps(msg)
             return msg.transforms[0].header.stamp
 
         # Some messages have a direct stamp field
-        if hasattr(msg, "stamp"):
-            return msg.stamp
-
-        # Could not find a timestamp
-        return None
+        return msg.stamp
 
     def sample_topics(self):
-        """Sample topics for the configured duration."""
         print(f"Sampling timestamps for {SAMPLE_DURATION} seconds...")
         start_time = time.time()
         while time.time() - start_time < SAMPLE_DURATION:
             rclpy.spin_once(self, timeout_sec=0.1)
 
     def analyze_results(self):
-        """Analyze collected timestamp data."""
-        if not self._topic_data:
-            print("No timestamp data collected")
-            return
-
         print(f"\nTimestamp Analysis for {len(self._topic_data)} topics:\n")
 
         for topic_name, samples in sorted(self._topic_data.items()):
-            if not samples:
-                continue
-
             print(f"Topic: {topic_name}")
             print(f"  Samples collected: {len(samples)}")
 
@@ -166,63 +146,20 @@ class TimeChecker(Node):
             print()
 
     def load_topics_from_config(self, topic_configs):
-        """Load message types from topic configuration.
-
-        Args:
-            topic_configs: List of (topic_name, type_string) tuples
-
-        Returns:
-            List of (topic_name, msg_class) tuples that are available
-
-        """
+        # Returns list of (topic_name, msg_class) tuples
         available_topics = []
-        current_topics = {name for name, _ in self.get_topic_names_and_types()}
 
-        for config in topic_configs:
-            if len(config) != 2:
-                print(
-                    f"Warning: Invalid config format {config}, expected (topic, type)"
-                )
-                continue
-
-            topic_name, type_string = config
-
-            # Check if topic exists
-            if topic_name not in current_topics:
-                print(f"Warning: Topic '{topic_name}' not found, skipping")
-                continue
-
-            try:
-                # Parse message type string (e.g., 'nav_msgs/msg/Odometry')
-                parts = type_string.split("/")
-                if len(parts) != 3:
-                    print(
-                        f"Warning: Invalid type string '{type_string}', skipping {topic_name}"
-                    )
-                    continue
-
-                pkg, _, msg = parts
-                module = __import__(f"{pkg}.msg", fromlist=[msg])
-                msg_class = getattr(module, msg)
-
-                available_topics.append((topic_name, msg_class))
-
-            except Exception as e:
-                print(f"Warning: Failed to load {topic_name} ({type_string}): {e}")
-                continue
+        for topic_name, type_string in topic_configs:
+            # Parse message type string (e.g., 'nav_msgs/msg/Odometry')
+            pkg, _, msg = type_string.split("/")
+            module = __import__(f"{pkg}.msg", fromlist=[msg])
+            msg_class = getattr(module, msg)
+            available_topics.append((topic_name, msg_class))
 
         return available_topics
 
 
 def check_timestamps(topic_configs=None):
-    """Check timestamps on specified topics.
-
-    Args:
-        topic_configs: List of (topic_name, type_string) tuples.
-                      If None, uses TOPICS_TO_CHECK.
-                      Example: [('/odom', 'nav_msgs/msg/Odometry')]
-
-    """
     rclpy.init()
     checker = TimeChecker()
 
@@ -234,14 +171,7 @@ def check_timestamps(topic_configs=None):
     print("Waiting for topic discovery...")
     time.sleep(2.0)  # Allow time for DDS discovery
 
-    # Load available topics from config
     topics = checker.load_topics_from_config(topic_configs)
-
-    if not topics:
-        print("No topics available to check")
-        checker.destroy_node()
-        rclpy.shutdown()
-        return
 
     print(f"\nSubscribing to {len(topics)} topics...")
     for topic_name, msg_type in topics:
