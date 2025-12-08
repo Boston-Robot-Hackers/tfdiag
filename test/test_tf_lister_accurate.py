@@ -12,7 +12,7 @@ from rclpy.qos import DurabilityPolicy
 from geometry_msgs.msg import TransformStamped
 from tf2_msgs.msg import TFMessage
 
-from tfdiag.tf_lister_accurate import TfListerAccurate
+from ros2diag.tf_lister_accurate import TfListerAccurate
 
 
 class TestTfListerAccurateInit(unittest.TestCase):

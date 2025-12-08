@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# test_integration.py - Integration tests for tfdiag
+# test_integration.py - Integration tests for ros2diag
 # Author: Pito Salas and Claude Code
 # Open Source Under MIT license
 
@@ -14,8 +14,8 @@ from geometry_msgs.msg import TransformStamped
 from tf2_msgs.msg import TFMessage
 import tf2_ros
 
-from tfdiag.tf_lister import TfLister
-from tfdiag.tf_lister_accurate import TfListerAccurate
+from ros2diag.tf_lister import TfLister
+from ros2diag.tf_lister_accurate import TfListerAccurate
 
 
 class MockTfBroadcaster(Node):

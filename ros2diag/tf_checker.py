@@ -184,3 +184,23 @@ def check_tf_pairs():
     checker.check_all_pairs()
     checker.destroy_node()
     rclpy.shutdown()
+
+
+def main(args=None):
+    """Main entry point for CLI."""
+    import sys
+
+    if len(sys.argv) > 1 and sys.argv[1] in ['-h', '--help']:
+        print("Usage: tf_checker")
+        print("\nCheck TF transform pairs for connectivity and freshness")
+        print("\nThis tool checks predefined transform pairs and reports:")
+        print("  - Availability of transforms")
+        print("  - Age of transform data")
+        print("  - Transform chain from source to target")
+        sys.exit(0)
+
+    check_tf_pairs()
+
+
+if __name__ == "__main__":
+    main()

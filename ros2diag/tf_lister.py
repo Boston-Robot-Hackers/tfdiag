@@ -185,3 +185,31 @@ def list_tf_frames(include_static):
     lister.print_frames_info(include_static)
     lister.destroy_node()
     rclpy.shutdown()
+
+
+def main(args=None):
+    """Main entry point for CLI."""
+    import sys
+
+    # Parse arguments
+    include_static = False
+    if len(sys.argv) > 1:
+        if sys.argv[1] in ['-h', '--help']:
+            print("Usage: tf_lister [OPTIONS]")
+            print("\nList TF frames in the system")
+            print("\nOptions:")
+            print("  -s, --static    Include static frames")
+            print("  -h, --help      Show this help message")
+            sys.exit(0)
+        elif sys.argv[1] in ['-s', '--static']:
+            include_static = True
+        else:
+            print(f"Unknown option: {sys.argv[1]}")
+            print("Use --help for usage information")
+            sys.exit(1)
+
+    list_tf_frames(include_static)
+
+
+if __name__ == "__main__":
+    main()

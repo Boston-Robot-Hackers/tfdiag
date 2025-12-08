@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# test_main.py - CLI tests for tfdiag main entry point
+# test_main.py - CLI tests for ros2diag main entry point
 # Author: Pito Salas and Claude Code
 # Open Source Under MIT license
 
@@ -7,7 +7,7 @@ import unittest
 from unittest.mock import Mock, patch, call
 import pytest
 
-from tfdiag.main import main, list_frames, app
+from ros2diag.main import main, list_frames, app
 
 
 class TestCLIStructure(unittest.TestCase):
@@ -17,7 +17,7 @@ class TestCLIStructure(unittest.TestCase):
         """Test that the cyclopts app is created."""
         self.assertIsNotNone(app)
         # app.name is a tuple in cyclopts
-        self.assertEqual(app.name, ('tfdiag',))
+        self.assertEqual(app.name, ('ros2diag',))
 
     def test_app_has_help(self):
         """Test that app has help text."""
@@ -39,8 +39,8 @@ class TestCLIStructure(unittest.TestCase):
 class TestListCommand(unittest.TestCase):
     """Test the list command functionality."""
 
-    @patch('tfdiag.main.tf_lister_accurate.list_tf_frames_accurate')
-    @patch('tfdiag.main.tf_lister.list_tf_frames')
+    @patch('ros2diag.main.tf_lister_accurate.list_tf_frames_accurate')
+    @patch('ros2diag.main.tf_lister.list_tf_frames')
     @patch('builtins.print')
     def test_list_calls_both_implementations(self, mock_print, mock_list_original, mock_list_accurate):
         """Test that list command calls both TF lister implementations."""
@@ -50,8 +50,8 @@ class TestListCommand(unittest.TestCase):
         mock_list_original.assert_called_once()
         mock_list_accurate.assert_called_once()
 
-    @patch('tfdiag.main.tf_lister_accurate.list_tf_frames_accurate')
-    @patch('tfdiag.main.tf_lister.list_tf_frames')
+    @patch('ros2diag.main.tf_lister_accurate.list_tf_frames_accurate')
+    @patch('ros2diag.main.tf_lister.list_tf_frames')
     @patch('builtins.print')
     def test_list_prints_separators(self, mock_print, mock_list_original, mock_list_accurate):
         """Test that list command prints section separators."""
@@ -69,8 +69,8 @@ class TestListCommand(unittest.TestCase):
         self.assertTrue(has_original_header)
         self.assertTrue(has_accurate_header)
 
-    @patch('tfdiag.main.tf_lister_accurate.list_tf_frames_accurate')
-    @patch('tfdiag.main.tf_lister.list_tf_frames')
+    @patch('ros2diag.main.tf_lister_accurate.list_tf_frames_accurate')
+    @patch('ros2diag.main.tf_lister.list_tf_frames')
     @patch('builtins.print')
     def test_list_output_order(self, mock_print, mock_list_original, mock_list_accurate):
         """Test that original implementation is called before accurate."""
@@ -83,8 +83,8 @@ class TestListCommand(unittest.TestCase):
         self.assertTrue(mock_list_original.called)
         self.assertTrue(mock_list_accurate.called)
 
-    @patch('tfdiag.main.tf_lister_accurate.list_tf_frames_accurate')
-    @patch('tfdiag.main.tf_lister.list_tf_frames')
+    @patch('ros2diag.main.tf_lister_accurate.list_tf_frames_accurate')
+    @patch('ros2diag.main.tf_lister.list_tf_frames')
     def test_list_handles_original_exception(self, mock_list_original, mock_list_accurate):
         """Test that exceptions in original implementation don't stop accurate."""
         # Make original implementation raise an exception
@@ -106,7 +106,7 @@ class TestMainFunction(unittest.TestCase):
         self.assertIsNotNone(main)
         self.assertTrue(callable(main))
 
-    @patch('tfdiag.main.app')
+    @patch('ros2diag.main.app')
     def test_main_calls_app(self, mock_app):
         """Test that main function calls the cyclopts app."""
         main()
@@ -114,7 +114,7 @@ class TestMainFunction(unittest.TestCase):
         # Verify app was called
         mock_app.assert_called_once()
 
-    @patch('tfdiag.main.app')
+    @patch('ros2diag.main.app')
     def test_main_with_arguments(self, mock_app):
         """Test main function delegates to app for argument parsing."""
         main()
@@ -126,7 +126,7 @@ class TestMainFunction(unittest.TestCase):
 class TestCLIHelp(unittest.TestCase):
     """Test CLI help functionality."""
 
-    @patch('sys.argv', ['tfdiag', '--help'])
+    @patch('sys.argv', ['ros2diag', '--help'])
     @patch('sys.exit')
     def test_help_flag(self, mock_exit):
         """Test --help flag works."""
@@ -147,8 +147,8 @@ class TestCLIHelp(unittest.TestCase):
 class TestCLIErrorHandling(unittest.TestCase):
     """Test CLI error handling."""
 
-    @patch('tfdiag.main.tf_lister_accurate.list_tf_frames_accurate')
-    @patch('tfdiag.main.tf_lister.list_tf_frames')
+    @patch('ros2diag.main.tf_lister_accurate.list_tf_frames_accurate')
+    @patch('ros2diag.main.tf_lister.list_tf_frames')
     def test_both_implementations_fail(self, mock_list_original, mock_list_accurate):
         """Test behavior when both implementations fail."""
         # Make both implementations raise exceptions
@@ -161,8 +161,8 @@ class TestCLIErrorHandling(unittest.TestCase):
 
         self.assertIn("Original failed", str(context.exception))
 
-    @patch('tfdiag.main.tf_lister_accurate.list_tf_frames_accurate')
-    @patch('tfdiag.main.tf_lister.list_tf_frames')
+    @patch('ros2diag.main.tf_lister_accurate.list_tf_frames_accurate')
+    @patch('ros2diag.main.tf_lister.list_tf_frames')
     @patch('builtins.print')
     def test_accurate_fails_after_original_succeeds(self, mock_print,
                                                      mock_list_original, mock_list_accurate):
@@ -182,8 +182,8 @@ class TestCLIErrorHandling(unittest.TestCase):
 class TestCLIIntegration(unittest.TestCase):
     """Integration tests for CLI."""
 
-    @patch('tfdiag.main.tf_lister_accurate.list_tf_frames_accurate')
-    @patch('tfdiag.main.tf_lister.list_tf_frames')
+    @patch('ros2diag.main.tf_lister_accurate.list_tf_frames_accurate')
+    @patch('ros2diag.main.tf_lister.list_tf_frames')
     @patch('builtins.print')
     def test_full_list_workflow(self, mock_print, mock_list_original, mock_list_accurate):
         """Test complete workflow of list command."""

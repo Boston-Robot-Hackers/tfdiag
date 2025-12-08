@@ -182,3 +182,26 @@ def check_timestamps(topic_configs=None):
 
     checker.destroy_node()
     rclpy.shutdown()
+
+
+def main(args=None):
+    """Main entry point for CLI."""
+    import sys
+
+    if len(sys.argv) > 1 and sys.argv[1] in ['-h', '--help']:
+        print("Usage: tf_timechecker")
+        print("\nCheck message timestamps against ROS2 and system time")
+        print("\nThis tool monitors configured topics and checks:")
+        print("  - Message timestamp vs ROS2 time")
+        print("  - Message timestamp vs system time")
+        print("  - Synchronization quality")
+        print("\nTopics checked:")
+        for topic, msg_type in TOPICS_TO_CHECK:
+            print(f"  {topic} ({msg_type})")
+        sys.exit(0)
+
+    check_timestamps()
+
+
+if __name__ == "__main__":
+    main()

@@ -11,13 +11,13 @@ import rclpy
 from geometry_msgs.msg import TransformStamped
 from tf2_msgs.msg import TFMessage
 
-from tfdiag.tf_lister import TfLister
+from ros2diag.tf_lister import TfLister
 
 
 class TestTfListerInit(unittest.TestCase):
     """Test initialization of TfLister."""
 
-    @patch('tfdiag.tf_lister.tf2_ros.TransformListener')
+    @patch('ros2diag.tf_lister.tf2_ros.TransformListener')
     @patch('tfdiag.tf_lister.tf2_ros.Buffer')
     def setUp(self, mock_buffer, mock_listener):
         """Set up test fixtures."""
@@ -53,7 +53,7 @@ class TestTfListerInit(unittest.TestCase):
 class TestCallbacks(unittest.TestCase):
     """Test TF callback methods."""
 
-    @patch('tfdiag.tf_lister.tf2_ros.TransformListener')
+    @patch('ros2diag.tf_lister.tf2_ros.TransformListener')
     @patch('tfdiag.tf_lister.tf2_ros.Buffer')
     def setUp(self, mock_buffer, mock_listener):
         """Set up test fixtures."""
@@ -130,7 +130,7 @@ class TestCallbacks(unittest.TestCase):
 class TestGetBroadcasterNodes(unittest.TestCase):
     """Test get_broadcaster_nodes method."""
 
-    @patch('tfdiag.tf_lister.tf2_ros.TransformListener')
+    @patch('ros2diag.tf_lister.tf2_ros.TransformListener')
     @patch('tfdiag.tf_lister.tf2_ros.Buffer')
     def setUp(self, mock_buffer, mock_listener):
         """Set up test fixtures."""
@@ -201,7 +201,7 @@ class TestGetBroadcasterNodes(unittest.TestCase):
 class TestMapFramesToNodes(unittest.TestCase):
     """Test map_frames_to_nodes method."""
 
-    @patch('tfdiag.tf_lister.tf2_ros.TransformListener')
+    @patch('ros2diag.tf_lister.tf2_ros.TransformListener')
     @patch('tfdiag.tf_lister.tf2_ros.Buffer')
     def setUp(self, mock_buffer, mock_listener):
         """Set up test fixtures."""
@@ -266,7 +266,7 @@ class TestMapFramesToNodes(unittest.TestCase):
 class TestGetAllFramesInfo(unittest.TestCase):
     """Test get_all_frames_info method."""
 
-    @patch('tfdiag.tf_lister.tf2_ros.TransformListener')
+    @patch('ros2diag.tf_lister.tf2_ros.TransformListener')
     @patch('tfdiag.tf_lister.tf2_ros.Buffer')
     def setUp(self, mock_buffer, mock_listener):
         """Set up test fixtures."""
@@ -314,7 +314,7 @@ odom:
 class TestPrintFramesInfo(unittest.TestCase):
     """Test print_frames_info method."""
 
-    @patch('tfdiag.tf_lister.tf2_ros.TransformListener')
+    @patch('ros2diag.tf_lister.tf2_ros.TransformListener')
     @patch('tfdiag.tf_lister.tf2_ros.Buffer')
     def setUp(self, mock_buffer, mock_listener):
         """Set up test fixtures."""

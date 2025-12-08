@@ -174,3 +174,23 @@ def monitor_tf_topics():
     monitor.monitor_topics()
     monitor.destroy_node()
     rclpy.shutdown()
+
+
+def main(args=None):
+    """Main entry point for CLI."""
+    import sys
+
+    if len(sys.argv) > 1 and sys.argv[1] in ['-h', '--help']:
+        print("Usage: tf_topics")
+        print("\nMonitor /tf and /tf_static topics and show published transform pairs")
+        print("\nThis tool monitors both TF topics and reports:")
+        print("  - Transform pairs being published")
+        print("  - Publishing rates for dynamic transforms")
+        print("  - Timestamps and ages of transforms")
+        sys.exit(0)
+
+    monitor_tf_topics()
+
+
+if __name__ == "__main__":
+    main()

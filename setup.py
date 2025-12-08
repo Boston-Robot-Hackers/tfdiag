@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'tfdiag'
+package_name = 'ros2diag'
 
 setup(
     name=package_name,
@@ -11,12 +11,12 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
     ],
-    install_requires=['setuptools', 'cyclopts'],
+    install_requires=['setuptools'],
     zip_safe=True,
     maintainer='pitosalas',
     maintainer_email='pitosalas@gmail.com',
-    description='TODO: Package description',
-    license='TODO: License declaration',
+    description='ROS2 diagnostic tools for TF, parameters, and network latency',
+    license='MIT',
     extras_require={
         'test': [
             'pytest',
@@ -24,7 +24,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'tfdiag = tfdiag.main:main',
+            # All scripts are now installed via CMake to bin/
+            # No console_scripts needed here
         ],
     },
 )

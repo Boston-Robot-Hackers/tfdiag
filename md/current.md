@@ -1,4 +1,4 @@
-# tfdiag
+# ros2diag
 
 ## Context
 
@@ -18,8 +18,8 @@ The tool successfully lists TF frames with the following features:
 - `tf_lister_accurate.py` has been removed.
 
 **CLI options:**
-- `ros2 run tfdiag tfdiag list` - List dynamic TF frames only (default)
-- `ros2 run tfdiag tfdiag list --include-static` - Include static frames
+- `ros2 run ros2diag ros2diag list` - List dynamic TF frames only (default)
+- `ros2 run ros2diag ros2diag list --include-static` - Include static frames
 
 ## Architecture
 
